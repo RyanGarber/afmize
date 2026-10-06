@@ -15,53 +15,55 @@ import Synchronization
 /// - `afmize_availability()` returns a heap-allocated JSON string; free it
 ///   with `afmize_string_free`.
 
-public typealias AfmizeEventCallback = @convention(c) (
+public typealias AfmizeEventCallback =
+  @convention(c) (
     UnsafeMutableRawPointer?,
     UnsafePointer<CChar>?
-) -> Void
+  ) -> Void
 
 private struct CallbackBox: @unchecked Sendable {
-    let context: UnsafeMutableRawPointer?
-    let callback: AfmizeEventCallback
+  let context: UnsafeMutableRawPointer?
+  let callback: AfmizeEventCallback
 }
 
 private let streamTasks = Mutex<[Int64: Task<Void, Never>]>([:])
 private let streamIDCounter = Atomic<Int64>(0)
 
 @_cdecl("afmize_availability")
-public func afmize_availability() -> UnsafeMutablePointer<CChar>? {
-    strdup(Afmize.availabilityJSON())
+public func afmizeAvailability() -> UnsafeMutablePointer<CChar>? {
+  strdup(Afmize.availabilityJSON())
 }
 
 @_cdecl("afmize_string_free")
-public func afmize_string_free(_ pointer: UnsafeMutablePointer<CChar>?) {
-    free(pointer)
+public func afmizeStringFree(_ pointer: UnsafeMutablePointer<CChar>?) {
+  free(pointer)
 }
 
 @_cdecl("afmize_stream_start")
-public func afmize_stream_start(
-    _ requestJSON: UnsafePointer<CChar>?,
-    _ context: UnsafeMutableRawPointer?,
-    _ callback: AfmizeEventCallback?
+public func afmizeStreamStart(
+  _ requestJSON: UnsafePointer<CChar>?,
+  _ context: UnsafeMutableRawPointer?,
+  _ callback: AfmizeEventCallback?
 ) -> Int64 {
-    guard let requestJSON, let callback else { return -1 }
-    let json = String(cString: requestJSON)
-    let box = CallbackBox(context: context, callback: callback)
-    let id = streamIDCounter.wrappingAdd(1, ordering: .relaxed).newValue
+  guard let requestJSON, let callback else { return -1 }
+  let json = String(cString: requestJSON)
+  let box = CallbackBox(context: context, callback: callback)
+  let id = streamIDCounter.wrappingAdd(1, ordering: .relaxed).newValue
 
-    let task = Task.detached {
-        await Afmize.run(requestJSON: json) { event in
-            event.jsonString().withCString { box.callback(box.context, $0) }
-        }
-        box.callback(box.context, nil)
-        _ = streamTasks.withLock { $0.removeValue(forKey: id) }
+  let task = Task.detached {
+    await Afmize.run(requestJSON: json) { event in
+      let pointer = strdup(event.jsonString())
+      box.callback(box.context, pointer)
     }
-    streamTasks.withLock { $0[id] = task }
-    return id
+    box.callback(box.context, nil)
+    _ = streamTasks.withLock { $0.removeValue(forKey: id) }
+  }
+  streamTasks.withLock { $0[id] = task }
+  return id
 }
 
 @_cdecl("afmize_stream_cancel")
-public func afmize_stream_cancel(_ id: Int64) {
-    let task = streamTasks.withLock { $0[id] }
-    task?.cancel()
+public func afmizeStreamCancel(_ id: Int64) {
+  let task = streamTasks.withLock { $0[id] }
+  task?.cancel()
 }

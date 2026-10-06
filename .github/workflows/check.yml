@@ -1,0 +1,31 @@
+name: Check
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check
+    runs-on: xcode-27
+
+    strategy:
+      matrix:
+        include:
+          - type: macos
+          - type: ios
+            deviceName: iPhone 18 Pro
+            osVersion: "27.0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build & Test
+        uses: brightdigit/swift-build@v1
+        with:
+          scheme: afmize
+          type: ${{ matrix.type }}
+          deviceName: ${{ matrix.deviceName }}
+          osVersion: ${{ matrix.osVersion }}
+          download-platform: true

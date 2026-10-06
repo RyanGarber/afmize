@@ -1,0 +1,5 @@
+#!/bin/bash
+PROJECT=$(realpath "$(dirname "${0:a}")/../")
+PATHS=($(realpath $PROJECT/Package.swift) $(realpath $PROJECT/Sources) $(realpath $PROJECT/Tests))
+echo "Formatting sources in: ${PATHS[@]}..."
+swift format --recursive --in-place ${PATHS[@]} "$@"

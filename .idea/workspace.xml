@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="975f9db1-08bb-47f8-b3a7-a1ebb7d23b80" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/build.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/check.yml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/Users/ryan/Projects/afmize" value="3GPwnMOG0m52AqI9lf15oqMSQF7" />
+    </persistenceIdMap>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="7137" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "RyanGarber"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "git@github.com:RyanGarber/afmize.git",
+    "accountId": "f616afc5-f973-4893-b185-7578b458fca4"
+  }
+}]]></component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="aaDU5bjV" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.03847326527496" />
+      <entry key="MS500" value="1.5431250813468536" />
+      <entry key="S2" value="2.4595037459273787" />
+      <entry key="S5" value="3.35175968192106" />
+      <entry key="S10" value="4.426510525217542" />
+      <entry key="S30" value="7.551878601417185" />
+      <entry key="S60" value="10.27054369960182" />
+      <entry key="M2" value="13.258166553249996" />
+      <entry key="M5" value="19.376603678169197" />
+      <entry key="M10" value="26.168960709504635" />
+      <entry key="M15" value="29.998758867708034" />
+      <entry key="M30" value="35.11548824574702" />
+      <entry key="H1" value="38.3002195885943" />
+      <entry key="H2" value="40.08048189310998" />
+      <entry key="H4" value="41.02213032976462" />
+      <entry key="D1" value="41.83444426712023" />
+      <entry key="W1" value="41.97628523356246" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="4.300288001896305E-140" />
+      <entry key="S5" value="1.7922776957634981E-56" />
+      <entry key="S10" value="1.343842211938285E-28" />
+      <entry key="S30" value="5.914184477783407E-10" />
+      <entry key="S60" value="3.155391772155516E-5" />
+      <entry key="M2" value="0.007745152911261701" />
+      <entry key="M5" value="0.21550625946017316" />
+      <entry key="M10" value="0.6558099025134999" />
+      <entry key="M15" value="0.9508047839489953" />
+      <entry key="M30" value="1.378823495115844" />
+      <entry key="H1" value="1.6605667292591733" />
+      <entry key="H2" value="1.822384080655507" />
+      <entry key="H4" value="1.909124018886459" />
+      <entry key="D1" value="1.9845585078336374" />
+      <entry key="W1" value="1.9977867255769857" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.1050418497205526" />
+      <entry key="MS500" value="1.0452471563380095" />
+      <entry key="S2" value="2.181571569698876" />
+      <entry key="S5" value="3.181509270764791" />
+      <entry key="S10" value="4.325008636732223" />
+      <entry key="S30" value="7.513024897934437" />
+      <entry key="S60" value="10.25021006704973" />
+      <entry key="M2" value="13.254835419209254" />
+      <entry key="M5" value="19.583464913387843" />
+      <entry key="M10" value="26.816501929668622" />
+      <entry key="M15" value="30.942345985823565" />
+      <entry key="M30" value="36.48948450921276" />
+      <entry key="H1" value="39.95797563859084" />
+      <entry key="H2" value="41.90134713502241" />
+      <entry key="H4" value="42.93046457740429" />
+      <entry key="D1" value="43.81886675300366" />
+      <entry key="W1" value="43.97405241744833" />
+    </decayedShown>
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 1,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3GPwnMOG0m52AqI9lf15oqMSQF7" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_family" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
+    "git-widget-placeholder": "ci/test",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/ryan/Projects/afmize",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.first.attach.projects": "true",
+    "settings.editor.selected.configurable": "settings.sync",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.26222.65" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.26222.65" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="975f9db1-08bb-47f8-b3a7-a1ebb7d23b80" name="Changes" comment="" />
+      <created>1783886678488</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1783886678488</updated>
+      <workItem from="1783886681222" duration="1982000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
