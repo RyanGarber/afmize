@@ -115,8 +115,11 @@ enum TranscriptBuilder {
     var contentSegments: [Transcript.Segment] = []
     var toolCalls: [Transcript.ToolCall] = []
 
-    func flushReasoning() {
+    func flushReasoning() throws {
       if !reasoningSegments.isEmpty {
+        guard #available(macOS 27.0, iOS 27.0, *) else {
+          throw AfmSetupError.unsupportedContent("reasoning history requires macOS 27 / iOS 27")
+        }
         entries.append(.reasoning(.init(segments: reasoningSegments)))
         reasoningSegments = []
       }
@@ -143,17 +146,20 @@ enum TranscriptBuilder {
           reasoningSegments.append(.text(.init(content: text)))
         }
       case .text:
-        flushReasoning()
+        try flushReasoning()
         flushToolCalls()
         if let text = part.text {
           contentSegments.append(.text(.init(content: text)))
         }
       case .file:
-        flushReasoning()
+        guard #available(macOS 27.0, iOS 27.0, *) else {
+          throw AfmSetupError.unsupportedContent("images require macOS 27 / iOS 27")
+        }
+        try flushReasoning()
         flushToolCalls()
         contentSegments.append(.attachment(attachmentSegment(from: try imageSource(from: part))))
       case .toolCall:
-        flushReasoning()
+        try flushReasoning()
         flushContent()
         let json = toolCallInputJSON(part.input)
         let arguments: GeneratedContent
@@ -178,7 +184,7 @@ enum TranscriptBuilder {
       }
     }
 
-    flushReasoning()
+    try flushReasoning()
     flushContent()
     flushToolCalls()
     return entries
@@ -192,6 +198,9 @@ enum TranscriptBuilder {
       case .text:
         return .text(.init(content: part.text ?? ""))
       case .file:
+        guard #available(macOS 27.0, iOS 27.0, *) else {
+          throw AfmSetupError.unsupportedContent("images require macOS 27 / iOS 27")
+        }
         return .attachment(attachmentSegment(from: try imageSource(from: part)))
       default:
         throw AfmSetupError.unsupportedContent(
@@ -202,11 +211,23 @@ enum TranscriptBuilder {
   }
 
   private static func promptFrom(parts: [AfmPart]) throws -> Prompt {
+    guard #available(macOS 27.0, iOS 27.0, *) else {
+      let texts = try parts.map { part -> String in
+        guard part.type == .text else {
+          throw AfmSetupError.unsupportedContent("non-text prompts require macOS 27 / iOS 27")
+        }
+        return part.text ?? ""
+      }
+      return Prompt(texts.joined())
+    }
     let pieces = try parts.map { part -> PromptPiece in
       switch part.type {
       case .text:
         return PromptPiece(payload: .text(part.text ?? ""))
       case .file:
+        guard #available(macOS 27.0, iOS 27.0, *) else {
+          throw AfmSetupError.unsupportedContent("images require macOS 27 / iOS 27")
+        }
         return PromptPiece(payload: .image(try imageSource(from: part)))
       default:
         throw AfmSetupError.unsupportedContent(
@@ -225,6 +246,7 @@ enum TranscriptBuilder {
     case image(CIImage)
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   struct PromptPiece: PromptRepresentable {
     enum Payload {
       case text(String)
@@ -247,6 +269,7 @@ enum TranscriptBuilder {
     }
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   static func attachmentSegment(from source: ImageSource) -> Transcript.AttachmentSegment {
     let attachment: Transcript.ImageAttachment
     switch source {

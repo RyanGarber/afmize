@@ -5,11 +5,11 @@ import FoundationModels
 /// FoundationModels `GenerationSchema` via `DynamicGenerationSchema`.
 enum SchemaConversion {
   static func generationSchema(name: String, jsonSchema: JSONValue?) throws -> GenerationSchema {
-    let root = dynamicSchema(jsonSchema ?? .object([:]), name: name)
+    let root = try dynamicSchema(jsonSchema ?? .object([:]), name: name)
     return try GenerationSchema(root: root, dependencies: [])
   }
 
-  static func dynamicSchema(_ schema: JSONValue, name: String) -> DynamicGenerationSchema {
+  static func dynamicSchema(_ schema: JSONValue, name: String) throws -> DynamicGenerationSchema {
     guard case .object(let object) = schema else {
       // `true` or other non-object schemas: accept freeform content.
       return DynamicGenerationSchema(type: GeneratedContent.self)
@@ -18,8 +18,8 @@ enum SchemaConversion {
     let description = object["description"]?.stringValue
 
     if let choices = (object["anyOf"] ?? object["oneOf"])?.arrayValue, !choices.isEmpty {
-      let subschemas = choices.enumerated().map { index, choice in
-        dynamicSchema(choice, name: "\(name)Option\(index)")
+      let subschemas = try choices.enumerated().map { index, choice in
+        try dynamicSchema(choice, name: "\(name)Option\(index)")
       }
       return DynamicGenerationSchema(name: name, description: description, anyOf: subschemas)
     }
@@ -42,7 +42,7 @@ enum SchemaConversion {
             DynamicGenerationSchema.Property(
               name: key,
               description: value.objectValue?["description"]?.stringValue,
-              schema: dynamicSchema(value, name: "\(name).\(key)"),
+              schema: try dynamicSchema(value, name: "\(name).\(key)"),
               isOptional: !required.contains(key)
             )
           )
@@ -75,7 +75,7 @@ enum SchemaConversion {
       return DynamicGenerationSchema(type: Bool.self)
 
     case "array":
-      let itemSchema = dynamicSchema(object["items"] ?? .object([:]), name: "\(name).item")
+      let itemSchema = try dynamicSchema(object["items"] ?? .object([:]), name: "\(name).item")
       return DynamicGenerationSchema(
         arrayOf: itemSchema,
         minimumElements: object["minItems"]?.intValue,
@@ -83,6 +83,9 @@ enum SchemaConversion {
       )
 
     case "null":
+      guard #available(macOS 26.4, iOS 26.4, *) else {
+        throw AfmSetupError.unsupportedContent("null schemas require macOS 26.4 / iOS 26.4")
+      }
       return .null
 
     default:

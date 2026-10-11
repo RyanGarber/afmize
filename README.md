@@ -1,6 +1,6 @@
 # afmize
 
-A Swift package that exposes Apple's FoundationModels SDK (macOS 27 / iOS 27) — both the
+A Swift package that exposes Apple's FoundationModels SDK (macOS 26 / iOS 26 and later) — both the
 **on-device** model and **Private Cloud Compute** — to host applications such as a Tauri v2
 app, on both macOS and iOS.
 
@@ -19,7 +19,12 @@ and tool-result parts appended to the message list.
 
 ## Requirements
 
-- macOS 27 / iOS 27, Xcode 27 (FoundationModels SDK)
+- macOS 26 / iOS 26 or later; Xcode 27 / Swift 6.4 to build.
+- Private Cloud Compute, tool calling (which needs transcript preservation), reasoning,
+  and image parts require macOS 27 / iOS 27. Requests using these features on 26 fail
+  with an error event followed by `finish`, using the existing stream error protocol.
+- On 26, on-device text streaming is supported; token usage is omitted.
+  Null schemas require 26.4 or later.
 - Apple Intelligence enabled on the device for the on-device model; PCC eligibility for the
   cloud model. Check at runtime via `afmize_availability()` / `Afmize.availabilityJSON()`.
 
@@ -150,8 +155,8 @@ swift-rs = { version = "1", features = ["build"] }
 use swift_rs::SwiftLinker;
 
 fn main() {
-    SwiftLinker::new("27.0")            // macOS deployment target
-        .with_ios("27.0")               // iOS deployment target
+    SwiftLinker::new("26.0")            // macOS deployment target
+        .with_ios("26.0")               // iOS deployment target
         .with_package("afmize", "../path/to/afmize") // path to this repo
         .link();
     tauri_build::build();

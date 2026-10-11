@@ -135,6 +135,7 @@ private func entryKinds(_ transcript: Transcript) -> [String] {
   #expect(entryKinds(built.transcript) == ["instructions", "prompt", "response"])
 }
 
+@available(macOS 27.0, iOS 27.0, *)
 @Test func buildsToolContinuationTranscript() throws {
   let toolDefinition = Transcript.ToolDefinition(
     name: "get_weather",
@@ -184,6 +185,7 @@ private func entryKinds(_ transcript: Transcript) -> [String] {
   #expect(calls[0].arguments.jsonString.contains("Paris"))
 }
 
+@available(macOS 27.0, iOS 27.0, *)
 @Test func groupsAssistantPartsInOrder() throws {
   let messages: [AfmMessage] = [
     AfmMessage(
@@ -318,9 +320,14 @@ func liveTextStreaming() async throws {
   #expect(events.last?.type == "finish")
   #expect(events.last?.finishReason == "stop")
   #expect(events.contains { $0.type == "text-delta" })
-  #expect((events.last?.usage?.totalTokens ?? 0) > 0)
+  if #available(macOS 27.0, iOS 27.0, *) {
+    #expect((events.last?.usage?.totalTokens ?? 0) > 0)
+  } else {
+    #expect(events.last?.usage == nil)
+  }
 }
 
+@available(macOS 27.0, iOS 27.0, *)
 @Test(.enabled(if: SystemLanguageModel.default.isAvailable))
 func liveToolCallInterrupt() async throws {
   let request = """
@@ -354,6 +361,7 @@ func liveToolCallInterrupt() async throws {
   #expect(toolCalls.first?.input?.contains("Paris") == true)
 }
 
+@available(macOS 27.0, iOS 27.0, *)
 @Test(.enabled(if: SystemLanguageModel.default.isAvailable))
 func liveToolResultContinuation() async throws {
   let request = """
@@ -397,4 +405,28 @@ func liveToolResultContinuation() async throws {
   #expect(events.last?.finishReason == "stop")
   let text = events.filter { $0.type == "text-delta" }.compactMap(\.delta).joined()
   #expect(!text.isEmpty)
+}
+
+
+// These checks run on a 26 host without requiring Apple Intelligence.
+@Test func rejectsUnavailableFeaturesOn26() async throws {
+  guard #unavailable(macOS 27.0, iOS 27.0) else { return }
+  for extra in [
+    #""model":"private-cloud-compute""#,
+    #""reasoningLevel":"deep""#,
+    #""toolChoice":"required""#
+  ] {
+    let events = await collectEvents("{\(extra),\"messages\":[]}")
+    #expect(events.map(\.type) == ["stream-start", "error", "finish"])
+    #expect(events[1].message?.contains("27") == true)
+    #expect(events.last?.finishReason == "error")
+  }
+  for role in [AfmRole.user, .assistant] {
+    #expect(throws: AfmSetupError.self) {
+      try TranscriptBuilder.build(
+        messages: [AfmMessage(role: role, parts: [
+          AfmPart(type: .file, mediaType: "image/png", data: "https://example.com/image.png")
+        ])], toolDefinitions: [])
+    }
+  }
 }

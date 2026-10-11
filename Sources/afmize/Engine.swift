@@ -53,11 +53,15 @@ public enum Afmize {
     }
 
     let cloud: Status
-    switch PrivateCloudComputeLanguageModel().availability {
-    case .available:
-      cloud = Status(available: true)
-    case .unavailable(let reason):
-      cloud = Status(available: false, reason: describe(reason))
+    if #available(macOS 27.0, iOS 27.0, *) {
+      switch PrivateCloudComputeLanguageModel().availability {
+      case .available:
+        cloud = Status(available: true)
+      case .unavailable(let reason):
+        cloud = Status(available: false, reason: describe(reason))
+      }
+    } else {
+      cloud = Status(available: false, reason: "os-not-supported")
     }
 
     let encoder = JSONEncoder()
@@ -109,6 +113,14 @@ public enum Afmize {
     let prompt: Prompt
     let hasTools = !(request.tools ?? []).isEmpty
     do {
+      if #unavailable(macOS 27.0, iOS 27.0) {
+        if hasTools || request.toolChoice != nil {
+          throw AfmSetupError.unsupportedContent("tool calling requires macOS 27 / iOS 27")
+        }
+        if let level = request.reasoningLevel, !level.isEmpty {
+          throw AfmSetupError.unsupportedContent("reasoning levels require macOS 27 / iOS 27")
+        }
+      }
       let tools = try (request.tools ?? []).map { definition in
         ProxyTool(
           name: definition.name,
@@ -136,7 +148,11 @@ public enum Afmize {
       return
     }
 
-    await stream(session: session, prompt: prompt, request: request, hasTools: hasTools, emit: emit)
+    if #available(macOS 27.0, iOS 27.0, *) {
+      await stream(session: session, prompt: prompt, request: request, hasTools: hasTools, emit: emit)
+    } else {
+      await streamText(session: session, prompt: prompt, request: request, emit: emit)
+    }
   }
 
   // MARK: Session setup
@@ -154,12 +170,15 @@ public enum Afmize {
       }
       return LanguageModelSession(model: model, tools: tools, transcript: transcript)
     case .privateCloudCompute:
-      let model = PrivateCloudComputeLanguageModel()
-      if case .unavailable(let reason) = model.availability {
-        throw AfmSetupError.modelUnavailable(
-          "Private Cloud Compute unavailable: \(describe(reason))")
+      if #available(macOS 27.0, iOS 27.0, *) {
+        let model = PrivateCloudComputeLanguageModel()
+        if case .unavailable(let reason) = model.availability {
+          throw AfmSetupError.modelUnavailable(
+            "Private Cloud Compute unavailable: \(describe(reason))")
+        }
+        return LanguageModelSession(model: model, tools: tools, transcript: transcript)
       }
-      return LanguageModelSession(model: model, tools: tools, transcript: transcript)
+      throw AfmSetupError.modelUnavailable("Private Cloud Compute requires macOS 27 / iOS 27")
     }
   }
 
@@ -174,6 +193,7 @@ public enum Afmize {
     }
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func describe(
     _ reason: PrivateCloudComputeLanguageModel.Availability.UnavailableReason
   ) -> String {
@@ -193,6 +213,38 @@ public enum Afmize {
     var emittedFileIDs: Set<String> = []
   }
 
+  private static func streamText(
+    session: LanguageModelSession,
+    prompt: Prompt,
+    request: AfmRequest,
+    emit: @escaping @Sendable (AfmEvent) -> Void
+  ) async {
+    let options = GenerationOptions(
+      temperature: request.temperature, maximumResponseTokens: request.maximumResponseTokens)
+    var previous = ""
+    do {
+      for try await snapshot in session.streamResponse(to: prompt, options: options) {
+        let text = snapshot.content
+        if text != previous {
+          if text.hasPrefix(previous) {
+            emit(.textDelta(id: "text-0", delta: String(text.dropFirst(previous.count))))
+          } else {
+            emit(.textReplace(id: "text-0", text: text))
+          }
+          previous = text
+        }
+      }
+      emit(.finish(reason: "stop", usage: nil))
+    } catch is CancellationError {
+      emit(.finish(reason: "other", usage: nil))
+    } catch {
+      let (code, message) = classify(error)
+      emit(.error(code: code, message: message))
+      emit(.finish(reason: "error", usage: nil))
+    }
+  }
+
+  @available(macOS 27.0, iOS 27.0, *)
   private static func stream(
     session: LanguageModelSession,
     prompt: Prompt,
@@ -242,6 +294,7 @@ public enum Afmize {
     }
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func emitDiffs(
     snapshot: LanguageModelSession.ResponseStream<String>.Snapshot,
     state: inout DiffState,
@@ -320,6 +373,7 @@ public enum Afmize {
 
   // MARK: Options mapping
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func toolCallingMode(
     _ choice: AfmToolChoice?,
     hasTools: Bool
@@ -332,6 +386,7 @@ public enum Afmize {
     }
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func reasoningLevel(_ raw: String?) -> ContextOptions.ReasoningLevel? {
     guard let raw, !raw.isEmpty else { return nil }
     switch raw {
@@ -342,6 +397,7 @@ public enum Afmize {
     }
   }
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func mapUsage(_ usage: LanguageModelSession.Usage) -> AfmUsage {
     AfmUsage(
       inputTokens: usage.input.totalTokenCount,
@@ -354,6 +410,7 @@ public enum Afmize {
 
   // MARK: Files
 
+  @available(macOS 27.0, iOS 27.0, *)
   private static func fileEvent(from segment: Transcript.AttachmentSegment) -> AfmEvent? {
     switch segment.content {
     case .image(let image):
@@ -399,13 +456,39 @@ public enum Afmize {
   }
 
   static func classify(_ error: any Error) -> (code: String, message: String) {
+    if #available(macOS 27.0, iOS 27.0, *), let classified = classifyModern(error) {
+      return classified
+    }
     switch error {
+    case let generationError as LanguageModelSession.GenerationError:
+      let code: String
+      switch generationError {
+      case .exceededContextWindowSize: code = "context-size-exceeded"
+      case .assetsUnavailable: code = "assets-unavailable"
+      case .guardrailViolation: code = "guardrail-violation"
+      case .unsupportedGuide: code = "unsupported-generation-guide"
+      case .unsupportedLanguageOrLocale: code = "unsupported-language-or-locale"
+      case .decodingFailure: code = "parsing-error"
+      case .rateLimited: code = "rate-limited"
+      case .concurrentRequests: code = "concurrent-requests"
+      case .refusal: code = "refusal"
+      @unknown default: code = "language-model-error"
+      }
+      return (code, generationError.localizedDescription)
+
     case let setupError as AfmSetupError:
       return setupError.codeAndMessage
 
     case let toolCallError as LanguageModelSession.ToolCallError:
       return classify(toolCallError.underlyingError)
 
+    default:
+      return ("unknown", String(describing: error))
+    }
+  }
+  @available(macOS 27.0, iOS 27.0, *)
+  private static func classifyModern(_ error: any Error) -> (code: String, message: String)? {
+    switch error {
     case let modelError as LanguageModelError:
       let code: String
       switch modelError {
@@ -447,8 +530,8 @@ public enum Afmize {
     case let parsingError as GeneratedContent.ParsingError:
       return ("parsing-error", parsingError.debugDescription)
 
-    default:
-      return ("unknown", String(describing: error))
+    default: return nil
     }
   }
+
 }
